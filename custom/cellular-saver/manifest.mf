@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Name: Cellular Saver
+Description: Cellular-only native data saver for Twitter Piko
+Version: 1.0.0
+Author: Local custom patch
+License: GPL-3.0-only
+Patcher-Version: 1.12.0
+
