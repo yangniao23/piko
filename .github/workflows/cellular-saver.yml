@@ -55,7 +55,7 @@ jobs:
           data = {
               "version": os.environ["VERSION"],
               "download_url": f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/releases/download/{os.environ["TAG"]}/cellular-saver-12.19.1.mpp',
-              "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              "created_at": datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat(),
               "description": "Cellular-only data saver for Twitter-Piko 12.19.1-release.0. Additional patch only; on-device behavior unverified."
           }
           pathlib.Path("custom/cellular-saver/patches-bundle.json").write_text(json.dumps(data, indent=2) + "\n")
