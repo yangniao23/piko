@@ -1,0 +1,68 @@
+name: Publish cellular saver
+on:
+  push:
+    branches: [cellular-data-saver]
+    paths:
+      - 'custom/cellular-saver/src/**'
+      - 'custom/cellular-saver/smali/**'
+      - 'custom/cellular-saver/build.py'
+      - 'custom/cellular-saver/manifest.mf'
+      - '.github/workflows/cellular-saver.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: cellular-saver-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'yangniao23/piko' && github.ref == 'refs/heads/cellular-data-saver'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cellular-data-saver
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Download build dependencies
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/cellular-tools"
+          gh release download v1.15.0 --repo MorpheApp/morphe-desktop --pattern morphe-desktop-1.15.0-all.jar --dir "$RUNNER_TEMP/cellular-tools"
+          curl --fail --location --retry 3 https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.3.37/r8-8.3.37.jar -o "$RUNNER_TEMP/cellular-tools/r8.jar"
+      - name: Build and verify patch bundle
+        run: |
+          VERSION="1.0.${GITHUB_RUN_NUMBER}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=cellular-saver-v$VERSION-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          sed -i "s/^Version: .*/Version: $VERSION/" custom/cellular-saver/manifest.mf
+          python3 custom/cellular-saver/build.py --jdk "$JAVA_HOME" --morphe "$RUNNER_TEMP/cellular-tools/morphe-desktop-1.15.0-all.jar" --r8 "$RUNNER_TEMP/cellular-tools/r8.jar"
+          git restore custom/cellular-saver/manifest.mf
+      - name: Publish MPP
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          printf '%s\n' 'Cellular-only data saver for Twitter-Piko 12.19.1-release.0 only.' 'Apply only this additional patch to the original Piko APK. Android device behavior remains unverified.' > "$RUNNER_TEMP/cellular-notes.md"
+          gh release create "$TAG" custom/cellular-saver/dist/cellular-saver-12.19.1.mpp --target "$(git rev-parse HEAD)" --title "Cellular Saver $VERSION" --notes-file "$RUNNER_TEMP/cellular-notes.md" --latest=false
+      - name: Update Morphe metadata after publication
+        run: |
+          python3 - <<'PY'
+          import datetime, json, os, pathlib
+          data = {
+              "version": os.environ["VERSION"],
+              "download_url": f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/releases/download/{os.environ["TAG"]}/cellular-saver-12.19.1.mpp',
+              "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              "description": "Cellular-only data saver for Twitter-Piko 12.19.1-release.0. Additional patch only; on-device behavior unverified."
+          }
+          pathlib.Path("custom/cellular-saver/patches-bundle.json").write_text(json.dumps(data, indent=2) + "\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add custom/cellular-saver/patches-bundle.json
+          git commit -m "chore: publish cellular saver $VERSION metadata"
+          git pull --rebase origin cellular-data-saver
+          git push origin HEAD:cellular-data-saver
