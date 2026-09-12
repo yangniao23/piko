@@ -394,4 +394,6 @@ https://github.com/crimera/piko/blob/dev/docs/about_login_token_patch.md
     <string name="piko_login_token_import_failed_already_exist">アカウントの追加に失敗しました(既に存在している可能性があります)</string>
     <string name="piko_ok">OK</string>
     <string name="piko_cancel">キャンセル</string>
+    <string name="piko_cellular_data_saver">モバイル通信時のみデータセーバーを自動で有効にする</string>
+    <string name="piko_cellular_data_saver_summary">Wi-Fiでは無効にします。手動変更は回線の変更またはアプリのプロセス再起動まで維持します。自動切り替えを無効にしても現在の状態は維持します。</string>
 </resources>

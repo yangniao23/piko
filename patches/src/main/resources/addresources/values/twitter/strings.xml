@@ -426,4 +426,6 @@ It's recommended to read this before using this feature. It includes some import
 
     <string name="piko_ok">OK</string>
     <string name="piko_cancel">Cancel</string>
+    <string name="piko_cellular_data_saver">Automatically enable data saver on mobile data</string>
+    <string name="piko_cellular_data_saver_summary">Turns data saver off on Wi-Fi. Manual changes last until the network changes or the app process restarts. Disabling automation keeps the current state.</string>
 </resources>

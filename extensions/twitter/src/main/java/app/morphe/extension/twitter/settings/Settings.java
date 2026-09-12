@@ -14,6 +14,8 @@ public class Settings {
     public static final String SHARED_PREF_NAME = "piko_settings";
     public static final String ACT_NAME = "activity_name";
 
+    public static final BooleanSetting CELLULAR_DATA_SAVER = new BooleanSetting("cellular_data_saver", false);
+
     public static final BooleanSetting PIKO_DEBUG = new BooleanSetting("piko_debug", false);
 
     public static final StringSetting VID_PUBLIC_FOLDER = new StringSetting("vid_public_folder", "Movies");

@@ -568,6 +568,12 @@ public class ScreenBuilder {
         LegacyTwitterPreferenceCategory category = null;
         if(buildCategory)
             category = preferenceCategory(str("piko_title_misc"));
+        if (SettingsStatus.cellularDataSaver) {
+            addPreference(category, helper.switchPreference(
+                    str("piko_cellular_data_saver"),
+                    str("piko_cellular_data_saver_summary"),
+                    Settings.CELLULAR_DATA_SAVER));
+        }
         if (SettingsStatus.blockUpdateScreen) {
             addPreference(category,
                     helper.switchPreference(

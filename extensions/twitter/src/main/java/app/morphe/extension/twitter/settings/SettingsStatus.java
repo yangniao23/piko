@@ -11,6 +11,9 @@ import app.morphe.extension.twitter.patches.FeatureSwitchPatch;
 
 public class SettingsStatus {
 
+    public static boolean cellularDataSaver = false;
+    public static void cellularDataSaver() { cellularDataSaver = true; }
+
     public static boolean showChangelogsPatchEnabled = false;
 
     public static boolean changeDownloadEnabled = false;
@@ -414,7 +417,7 @@ public class SettingsStatus {
     }
 
     public static boolean enableMiscSection() {
-        return ( pauseSearchSuggestions || removeSearchSuggestions || hideSocialProof || roundOffNumbers || enableFontMod || hideRecommendedUsers || hideFAB || hideViewCount || customSharingDomainEnabled || hideFABBtns);
+        return ( cellularDataSaver || pauseSearchSuggestions || removeSearchSuggestions || hideSocialProof || roundOffNumbers || enableFontMod || hideRecommendedUsers || hideFAB || hideViewCount || customSharingDomainEnabled || hideFABBtns);
     }
 
     public static boolean enableAdsSection() {
