@@ -9,7 +9,8 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.patch.PatchException
-import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.patch.mutableClassDefBy
+import app.morphe.patcher.patch.patch
 import app.morphe.patcher.string
 import app.morphe.util.getReference
 import com.android.tools.smali.dexlib2.Opcode
@@ -34,7 +35,7 @@ private object SatelliteCallback : Fingerprint(
 )
 
 @Suppress("unused")
-val cellularDataSaverPatch = bytecodePatch(
+val cellularDataSaverPatch = patch(
     name = "Cellular data saver",
     description = "Adds an opt-in setting to switch native data saver with the active network.",
 ) {
