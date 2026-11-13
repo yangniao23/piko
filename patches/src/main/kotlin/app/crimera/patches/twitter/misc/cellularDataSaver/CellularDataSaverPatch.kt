@@ -12,11 +12,13 @@ import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.mutableClassDefBy
 import app.morphe.patcher.patch.patch
 import app.morphe.patcher.string
-import app.morphe.util.getReference
+import app.morphe.patcher.util.getReference
+import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.builder.MutableMethodImplementation
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.immutable.ImmutableMethod
 
 private const val EXTENSION = "Lapp/morphe/extension/twitter/patches/CellularDataSaver;"
 
@@ -66,10 +68,21 @@ val cellularDataSaverPatch = patch(
         }
         val extension = mutableClassDefBy(EXTENSION)
         fun bridge(name: String, registers: Int, code: String) {
-            extension.methods.single { it.name == name }.apply {
-                implementation = MutableMethodImplementation(registers)
+            val original = extension.methods.single { it.name == name }
+            val replacement = ImmutableMethod(
+                original.definingClass,
+                original.name,
+                original.parameters,
+                original.returnType,
+                original.accessFlags,
+                original.annotations,
+                original.hiddenApiRestrictions,
+                MutableMethodImplementation(registers),
+            ).toMutable().apply {
                 addInstructions(0, code)
             }
+            extension.methods.remove(original)
+            extension.methods.add(replacement)
         }
         bridge("createManager", 2, """
             new-instance v0, $manager
