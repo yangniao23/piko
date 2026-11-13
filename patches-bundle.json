@@ -1,6 +1,6 @@
 {
-  "version": "3.11.1-cellular.3.1",
-  "download_url": "https://github.com/yangniao23/piko/releases/download/v3.11.1-cellular.3.1/patches-3.11.1-cellular.3.1.mpp",
-  "created_at": "2026-11-13T15:01:39.123823",
-  "description": "Piko with opt-in Cellular data saver. Full Piko bundle for X 12.19.1-release.0; on-device behavior unverified."
+  "version": "3.11.1-cellular.4.1",
+  "download_url": "https://github.com/yangniao23/piko/releases/download/v3.11.1-cellular.4.1/patches-3.11.1-cellular.4.1.mpp",
+  "created_at": "2026-11-13T15:08:39.493708",
+  "description": "Piko with opt-in Cellular data saver and Spoof client version for X Chat. Full bundle for X 12.19.1-release.0; on-device behavior unverified."
 }
