@@ -30,7 +30,10 @@ def main():
     # Read the baseline and file inventory from the same commit as the source.
     config = json.loads(git("show", f"{source}:maintenance/upstream.json"))
     base = git("rev-parse", "--verify", f'{config["commit"]}^{{commit}}').decode().strip()
-    tagged_base = git("rev-parse", "--verify", f'{config["tag"]}^{{commit}}').decode().strip()
+    try:
+        tagged_base = git("rev-parse", "--verify", f'{config["tag"]}^{{commit}}').decode().strip()
+    except subprocess.CalledProcessError:
+        raise SystemExit(f'Fetch the recorded official tag {config["tag"]} from {config["repository"]} first') from None
     if tagged_base != base:
         raise SystemExit("Recorded upstream tag and commit do not match")
     if subprocess.run(["git", "merge-base", "--is-ancestor", base, source], cwd=ROOT).returncode:

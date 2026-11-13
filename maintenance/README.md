@@ -30,8 +30,11 @@
 このブランチのコミット済みの内容から、公式版との差分だけを生成します。実行にはGitとPython 3が必要です。作業中の編集、未追跡ファイル、APK、署名鍵は含みません。既存の未追跡ファイル `piko-cellular-saver.patch` は旧単独版の記録なので、今回の差分として使いません。
 
 ```sh
+git fetch https://github.com/crimera/piko.git tag v3.11.1 --no-tags
 python3 maintenance/export_patches.py --output /tmp/piko-custom-patches --verify
 ```
+
+この取得は、フォーク側に公式タグがない場合に必要です。Actionsでも記録した公式タグを取得し、タグのコミットが `upstream.json` と一致することを検査します。
 
 出力は4つのパッチ、適用順を記した `series`、基準コミット・作成元コミット・各パッチのSHA-256を記した `manifest.json` です。既存の出力先は上書きしません。`--verify` は一時的な公式版の作業コピーに差分を当て直し、コミット済みソースとファイル内容・ツリー全体が一致することを検査します。元のブランチや作業中の編集は変更しません。
 

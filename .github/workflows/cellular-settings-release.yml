@@ -27,6 +27,19 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Fetch the recorded upstream baseline
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import subprocess
+
+          baseline = json.loads(Path("maintenance/upstream.json").read_text())
+          tag = baseline["tag"]
+          subprocess.run(["git", "fetch", "--no-tags", baseline["repository"],
+                          f"refs/tags/{tag}:refs/tags/{tag}"], check=True)
+          PY
+
       - name: Export and replay the minimal custom patch stack
         run: python3 maintenance/export_patches.py --output "$RUNNER_TEMP/piko-custom-patches" --verify
 
