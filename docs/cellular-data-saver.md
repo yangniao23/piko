@@ -6,7 +6,7 @@
 
 対応するXのバージョンは、公式版と同じ `12.19.1-release.0` です。
 
-1. このブランチからビルドしたMPPをMorpheに読み込みます。
+1. [このフォークのReleases](https://github.com/yangniao23/piko/releases)から `Piko ... (cellular data saver)` のMPPを取得し、Morpheに読み込みます。このブランチから自分でビルドすることもできます。
 2. 対応する元のXのAPKMに、必要なPikoパッチと `Cellular data saver` を適用します。設定画面の追加パッチも依存関係として適用されます。
 3. Xを起動し、Piko設定のその他の項目で「モバイル通信時のみデータセーバーを自動で有効にする」を有効にします。初期状態は無効です。
 
@@ -27,7 +27,7 @@
 
 ## 今回の更新と検証
 
-- 公式の `v3.11.1` タグを取り込み、Morphe Patcher 2系の `patch` APIと `mutableClassDefBy` のインポートに対応しました。
+- 公式の `v3.11.1` タグを取り込み、Morphe Patcher 2系の `patch` API、移動したユーティリティのインポート、ネイティブブリッジのメソッド置換に対応しました。
 - 対応Xバージョン、設定キー、初期値、自動切り替えの処理は維持しています。
 - ビルドコマンドは `./gradlew buildAndroid :patches:checkStringResources` です。GitHub Packagesからの依存関係取得には、利用可能なGitHub認証が必要です。
-- 今回の環境ではビルド用プラグイン `app.morphe.patches:1.3.4` の取得がHTTP 401で失敗したため、MPPの生成とAPKへの適用、実機動作は未検証です。
+- ローカルでは依存関係の取得がHTTP 401で失敗しましたが、[GitHub Actionsのビルドと文字列検査](https://github.com/yangniao23/piko/actions/runs/43397133017)は成功し、[v3.11.1-cellular.2.1](https://github.com/yangniao23/piko/releases/tag/v3.11.1-cellular.2.1)のMPPを公開済みです。APKへの適用と実機動作は未検証です。
