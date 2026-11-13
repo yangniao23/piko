@@ -12,6 +12,12 @@
 
 公式PikoのMPPには、この追加機能は含まれません。また、別ブランチ `cellular-data-saver` の単独MPPとは配布形式が異なります。
 
+## 配布
+
+`cellular-data-saver-settings` へのpushで、専用の `Release Piko with cellular data saver` ワークフローがビルドと文字列検査を実行し、成功した場合にGitHub ReleasesへMPPを公開します。公式版の自動リリースとは独立しており、追加のGPGシークレットは使いません。
+
+リリース名は `v3.11.1-cellular.<実行番号>.<試行番号>` の形式です。MPP、ダウンロードURLを記録した `patches-bundle.json`、`SHA256SUMS` が添付されます。MPPは署名なしで、端末へのインストールや実機検証は自動では行いません。
+
 ## 動作
 
 - モバイル通信ではX標準のデータセーバーを有効にし、Wi-Fi・未接続・その他の回線では無効にします。Wi-Fiとモバイル通信の属性が同時に通知された場合はWi-Fiを優先します。

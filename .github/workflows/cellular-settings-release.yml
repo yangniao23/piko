@@ -1,0 +1,96 @@
+name: Release Piko with cellular data saver
+
+on:
+  push:
+    branches:
+      - cellular-data-saver-settings
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cellular-settings-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'yangniao23/piko' && github.ref == 'refs/heads/cellular-data-saver-settings'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      packages: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: burrunan/gradle-cache-action@v3
+
+      - name: Set custom release version
+        run: |
+          UPSTREAM_VERSION=$(sed -n 's/^version *= *//p' gradle.properties)
+          VERSION="${UPSTREAM_VERSION}-cellular.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=v$VERSION" >> "$GITHUB_ENV"
+
+      - name: Build Android patch bundle and check strings
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: ./gradlew buildAndroid :patches:checkStringResources -Pversion="$VERSION" --console=plain
+
+      - name: Prepare release files
+        run: |
+          mkdir -p dist
+          cp "patches/build/libs/patches-${VERSION}.mpp" dist/
+          python3 - <<'PY'
+          import datetime
+          import json
+          import os
+          from pathlib import Path
+
+          version = os.environ["VERSION"]
+          metadata = {
+              "version": version,
+              "download_url": f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/releases/download/{os.environ["TAG"]}/patches-{version}.mpp',
+              "created_at": datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat(),
+              "description": "Piko with opt-in Cellular data saver. Full Piko bundle for X 12.19.1-release.0; on-device behavior unverified.",
+          }
+          Path("dist/patches-bundle.json").write_text(json.dumps(metadata, indent=2) + "\n")
+          PY
+          (cd dist && sha256sum *.mpp patches-bundle.json > SHA256SUMS)
+          cat > "$RUNNER_TEMP/cellular-settings-notes.md" <<'EOF'
+          Full Piko patch bundle with the opt-in **Cellular data saver** patch.
+
+          - X target: **12.19.1-release.0** (APKM).
+          - Import the MPP into Morphe and select **Cellular data saver** with your other Piko patches.
+          - Enable automatic data saver in Piko settings after patching; it is off by default.
+          - This replaces the full Piko bundle. It is different from the older standalone **Cellular-only data saver** patch.
+          - Build and string checks passed. APK patching and on-device behavior remain unverified.
+
+          The MPP is unsigned; SHA256SUMS is provided for file integrity checks.
+          EOF
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: piko-cellular-${{ env.VERSION }}
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$TAG" dist/* \
+            --target "$GITHUB_SHA" \
+            --title "Piko $VERSION (cellular data saver)" \
+            --notes-file "$RUNNER_TEMP/cellular-settings-notes.md" \
+            --latest=false
