@@ -49,6 +49,12 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
         run: ./gradlew buildAndroid :patches:checkStringResources :patches:generatePatchesList -Pversion="$VERSION" --console=plain
 
+      - name: Set up Java 21 for APK validation
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Verify custom patches on the 12.19.1 regression fixture
         env:
           GH_TOKEN: ${{ github.token }}
