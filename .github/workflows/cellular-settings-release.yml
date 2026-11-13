@@ -33,6 +33,9 @@ jobs:
 
       - uses: burrunan/gradle-cache-action@v3
 
+      - name: Check chat version routing
+        run: python3 .github/scripts/check_chat_version_routing.py
+
       - name: Set custom release version
         run: |
           UPSTREAM_VERSION=$(sed -n 's/^version *= *//p' gradle.properties)
@@ -58,28 +61,31 @@ jobs:
 
           version = os.environ["VERSION"]
           patch_list = json.loads(Path("patches-list.json").read_text())
-          cellular = [patch for patch in patch_list["patches"] if patch["name"] == "Cellular data saver"]
-          if len(cellular) != 1:
-              raise SystemExit("Cellular data saver must be present exactly once in the loaded patch list")
+          for name in ("Cellular data saver", "Spoof client version"):
+              matches = [patch for patch in patch_list["patches"] if patch["name"] == name]
+              if len(matches) != 1:
+                  raise SystemExit(f"{name} must be present exactly once in the loaded patch list")
           patch_list["version"] = version
           Path("dist/patches-list.json").write_text(json.dumps(patch_list, indent=2) + "\n")
           metadata = {
               "version": version,
               "download_url": f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/releases/download/{os.environ["TAG"]}/patches-{version}.mpp',
               "created_at": datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat(),
-              "description": "Piko with opt-in Cellular data saver. Full Piko bundle for X 12.19.1-release.0; on-device behavior unverified.",
+              "description": "Piko with opt-in Cellular data saver and Spoof client version for X Chat. Full bundle for X 12.19.1-release.0; on-device behavior unverified.",
           }
           Path("dist/patches-bundle.json").write_text(json.dumps(metadata, indent=2) + "\n")
           PY
-          (cd dist && sha256sum *.mpp patches-bundle.json > SHA256SUMS)
+          (cd dist && sha256sum *.mpp patches-bundle.json patches-list.json > SHA256SUMS)
           cat > "$RUNNER_TEMP/cellular-settings-notes.md" <<'EOF'
-          Full Piko patch bundle with the opt-in **Cellular data saver** patch.
+          Full Piko patch bundle with **Cellular data saver** and **Spoof client version** for X Chat.
 
           - X target: **12.19.1-release.0** (APKM).
           - Import the MPP into Morphe and select **Cellular data saver** with your other Piko patches.
+          - Select **Spoof client version** to work around X Chat's **Update Required** rejection. Keep its default reported version (`12.41.0-prod.01`, code `312410001`). Repatch the original APKM; updating the MPP alone does not modify the installed app.
+          - Chat fix adapted from https://github.com/crimera/piko/pull/2302 (not yet merged upstream).
           - Enable automatic data saver in Piko settings after patching; it is off by default.
           - This replaces the full Piko bundle. It is different from the older standalone **Cellular-only data saver** patch.
-          - Build and string checks passed. APK patching and on-device behavior remain unverified.
+          - Build, string checks, chat request routing tests, and loaded patch list checks passed. APK patching and on-device behavior remain unverified in this fork.
 
           The MPP is unsigned; SHA256SUMS is provided for file integrity checks.
           EOF
