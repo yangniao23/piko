@@ -12,9 +12,11 @@
 
 公式PikoのMPPには、この追加機能は含まれません。また、別ブランチ `cellular-data-saver` の単独MPPとは配布形式が異なります。
 
+Morpheのソースとして登録する場合は [Piko + Cellular data saver を追加](https://morphe.software/add-source?github=yangniao23/piko) を使い、ソースを更新してください。選択するソースは `yangniao23/piko`、バンドル名は `Piko + Cellular data saver` です。`Cellular data saver` が一覧にない場合は、公式版のソースや古いバンドルを選んでいないか確認してください。
+
 ## 配布
 
-`cellular-data-saver-settings` へのpushで、専用の `Release Piko with cellular data saver` ワークフローがビルドと文字列検査を実行し、成功した場合にGitHub ReleasesへMPPを公開します。公式版の自動リリースとは独立しており、追加のGPGシークレットは使いません。
+`cellular-data-saver-settings` へのpushで、専用の `Release Piko with cellular data saver` ワークフローがビルドと文字列検査を実行し、成功した場合にGitHub ReleasesへMPPを公開します。公開後、既定ブランチの `patches-bundle.json` を更新し、Morpheのソース登録からも追加版を取得できるようにします。公式版の自動リリースとは独立しており、追加のGPGシークレットは使いません。
 
 リリース名は `v3.11.1-cellular.<実行番号>.<試行番号>` の形式です。MPP、ダウンロードURLを記録した `patches-bundle.json`、`SHA256SUMS` が添付されます。MPPは署名なしで、端末へのインストールや実機検証は自動では行いません。
 

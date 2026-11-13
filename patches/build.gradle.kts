@@ -2,12 +2,12 @@ group = "crimera"
 
 patches {
     about {
-        name = "Piko"
-        description = "Morphe patches focused on Twitter/X"
-        source = "git@github.com:crimera/piko.git"
+        name = "Piko + Cellular data saver"
+        description = "Piko patches with opt-in cellular data saver for Twitter/X"
+        source = "git@github.com:yangniao23/piko.git"
         author = "crimera"
         contact = "na"
-        website = "https://github.com/crimera/piko"
+        website = "https://github.com/yangniao23/piko"
         license = "GNU General Public License v3.0"
     }
 }
