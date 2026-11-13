@@ -25,6 +25,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      - name: Export and replay the minimal custom patch stack
+        run: python3 maintenance/export_patches.py --output "$RUNNER_TEMP/piko-custom-patches" --verify
 
       - uses: actions/setup-java@v6
         with:
@@ -78,6 +82,7 @@ jobs:
         run: |
           mkdir -p dist
           cp "patches/build/libs/patches-${VERSION}.mpp" dist/
+          tar -czf "dist/piko-custom-patches-${VERSION}.tar.gz" -C "$RUNNER_TEMP" piko-custom-patches
           python3 - <<'PY'
           import datetime
           import json
@@ -100,7 +105,7 @@ jobs:
           }
           Path("dist/patches-bundle.json").write_text(json.dumps(metadata, indent=2) + "\n")
           PY
-          (cd dist && sha256sum *.mpp patches-bundle.json patches-list.json > SHA256SUMS)
+          (cd dist && sha256sum *.mpp *.tar.gz patches-bundle.json patches-list.json > SHA256SUMS)
           cat > "$RUNNER_TEMP/cellular-settings-notes.md" <<'EOF'
           Full Piko patch bundle with **Cellular data saver** and **Spoof client version** for X Chat.
 
@@ -113,6 +118,7 @@ jobs:
           - Build, string checks, chat request routing tests, and loaded patch list checks passed.
           - Both custom patches were applied to a pinned public Piko 12.19.1 APK; rebuilt DEX was checked for native bridges, the correct satellite callback, startup initialization, and chat operation hooks. This fixture is already patched; it does not test all 75 patches on a clean APKM.
           - On-device behavior remains unverified in this fork.
+          - The source maintenance archive contains four separate diffs against the recorded upstream release, plus a source commit and SHA-256 manifest. Reapplying all diffs was verified to reproduce the committed source tree. See `maintenance/README.md` in the repository for future updates.
 
           The MPP is unsigned; SHA256SUMS is provided for file integrity checks.
           EOF

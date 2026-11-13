@@ -18,6 +18,7 @@
 
 This branch adds an opt-in **Cellular data saver** patch to upstream Piko v3.11.1.
 See [the cellular data saver guide](docs/cellular-data-saver.md) for usage and verification status.
+For upstream updates, see the [change record and minimal patch workflow](maintenance/README.md).
 
 Starting with patches v3.0.0, Piko patches use [Morphe](https://morphe.software).
 

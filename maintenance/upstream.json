@@ -1,0 +1,53 @@
+{
+  "repository": "https://github.com/crimera/piko.git",
+  "tag": "v3.11.1",
+  "commit": "297519632c897d19e9f0df0c39e5b315d1a7390b",
+  "verified_x_versions": ["12.19.1-release.0"],
+  "verified_patcher_version": "2.3.0",
+  "chat_backport": {
+    "pull_request": "https://github.com/crimera/piko/pull/2302",
+    "commit": "5bfa10174f35bd0e5c4c6e60246cc2637a9b8b20"
+  },
+  "groups": [
+    {
+      "name": "cellular",
+      "file": "01-cellular-data-saver.patch",
+      "paths": [
+        "extensions/twitter/src/main/java/app/morphe/extension/twitter/patches/CellularDataSaver.java",
+        "extensions/twitter/src/main/java/app/morphe/extension/twitter/settings/ScreenBuilder.java",
+        "extensions/twitter/src/main/java/app/morphe/extension/twitter/settings/Settings.java",
+        "extensions/twitter/src/main/java/app/morphe/extension/twitter/settings/SettingsStatus.java",
+        "patches/src/main/kotlin/app/crimera/patches/twitter/misc/cellularDataSaver/CellularDataSaverPatch.kt",
+        "patches/src/main/resources/addresources/values-ja-rJP/twitter/strings.xml",
+        "patches/src/main/resources/addresources/values/twitter/strings.xml"
+      ]
+    },
+    {
+      "name": "chat",
+      "file": "02-xchat-client-version.patch",
+      "paths": [
+        "extensions/twitter/src/main/java/app/morphe/extension/twitter/patches/clientversion/SpoofClientVersionPatch.java",
+        "patches/src/main/kotlin/app/crimera/patches/twitter/misc/clientversion/SpoofClientVersionPatch.kt"
+      ]
+    },
+    {
+      "name": "identity",
+      "file": "03-fork-identity.patch",
+      "paths": ["patches/build.gradle.kts"]
+    },
+    {
+      "name": "maintenance",
+      "file": "04-release-tests-and-docs.patch",
+      "paths": [
+        ".github/scripts/check_chat_version_routing.py",
+        ".github/scripts/check_custom_patch_application.py",
+        ".github/tests/SpoofClientVersionTest.java",
+        ".github/tests/VerifyCellularPatch.java",
+        ".github/workflows/cellular-settings-release.yml",
+        "README.md",
+        "docs/cellular-data-saver.md",
+        "maintenance"
+      ]
+    }
+  ]
+}
