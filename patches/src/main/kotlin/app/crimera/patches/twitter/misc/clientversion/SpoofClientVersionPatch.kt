@@ -24,7 +24,6 @@ import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.NarrowLiteralInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
-import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.iface.reference.StringReference
@@ -236,14 +235,24 @@ private fun restoreLegacyUserAgentVersionCode(versionCode: Int) {
             if (start < 0) return@forEach
             val index = (start + 1 until minOf(start + 12, instructions.size)).firstOrNull {
                 val field = (instructions[it] as? ReferenceInstruction)?.reference as? FieldReference
-                instructions[it].opcode == Opcode.IGET &&
-                    field?.definingClass == "Landroid/content/pm/PackageInfo;" && field.name == "versionCode"
+                val call = (instructions[it] as? ReferenceInstruction)?.reference as? MethodReference
+                (instructions[it].opcode == Opcode.IGET &&
+                    field?.definingClass == "Landroid/content/pm/PackageInfo;" && field.name == "versionCode") ||
+                    (instructions[it].opcode in listOf(Opcode.INVOKE_STATIC, Opcode.INVOKE_STATIC_RANGE) &&
+                        call?.definingClass == "Lapp/morphe/extension/all/versioncode/DisablePlayStoreUpdatesPatch;" &&
+                        call.name == "getVersionCode" && call.returnType == "I" &&
+                        call.parameterTypes.map(CharSequence::toString) == listOf("Landroid/content/pm/PackageInfo;"))
             } ?: throw PatchException("User agent version code not found in ${classDef.type}")
             val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
                 it.name == method.name && it.returnType == method.returnType && it.parameterTypes == method.parameterTypes
             }
-            val register = mutableMethod.getInstruction<TwoRegisterInstruction>(index).registerA
+            val resultIndex = if (instructions[index].opcode == Opcode.IGET) index else index + 1
+            if (resultIndex != index && instructions.getOrNull(resultIndex)?.opcode != Opcode.MOVE_RESULT) {
+                throw PatchException("Unexpected version code hook result in ${classDef.type}")
+            }
+            val register = mutableMethod.getInstruction<OneRegisterInstruction>(resultIndex).registerA
             mutableMethod.replaceInstruction(index, "const v$register, $versionCode")
+            if (resultIndex != index) mutableMethod.replaceInstruction(resultIndex, "nop")
             found++
         }
     }

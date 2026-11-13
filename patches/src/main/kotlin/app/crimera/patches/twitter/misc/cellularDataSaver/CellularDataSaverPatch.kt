@@ -27,14 +27,29 @@ private object ManagerConstructor : Fingerprint(
     filters = listOf(string("android_sat_mode_support_enabled")),
 )
 private object NativeToggle : Fingerprint(
+    classFingerprint = ManagerConstructor,
     parameters = listOf("Z"), returnType = "V",
     filters = listOf(string("prev_data_sync"), string("prev_image_quality_upload")),
 )
 private object SatelliteCallback : Fingerprint(
+    superclass = "Landroid/net/ConnectivityManager\$NetworkCallback;",
     name = "onCapabilitiesChanged",
     parameters = listOf("Landroid/net/Network;", "Landroid/net/NetworkCapabilities;"),
     filters = listOf(string("data_saved_toggled_by_sat_mode")),
+    // X ships a second callback with the same string for its newer media stack.
+    // Only the callback holding this manager controls the legacy data saver.
+    custom = { _, classDef ->
+        classDef.fields.any { it.type == ManagerConstructor.originalMethod.definingClass }
+    },
 )
+
+private fun <T> Iterable<T>.singleNative(description: String, predicate: (T) -> Boolean): T {
+    val matches = filter(predicate)
+    if (matches.size != 1) {
+        throw PatchException("Cellular data saver: expected one $description, found ${matches.size}")
+    }
+    return matches[0]
+}
 
 @Suppress("unused")
 val cellularDataSaverPatch = patch(
@@ -52,23 +67,27 @@ val cellularDataSaverPatch = patch(
         val manager = ctor.definingClass
         val prefs = ctor.implementation!!.instructions.mapNotNull {
             if (it.opcode == Opcode.IPUT_OBJECT) it.getReference<FieldReference>() else null
-        }.single { it.definingClass == manager }
-        val references = satellite.implementation!!.instructions.mapNotNull { it.getReference<MethodReference>() }
-        val read = references.distinct().single {
-            it.definingClass == prefs.type && it.name == "getBoolean" && it.returnType == "Z"
+        }.singleNative("manager preferences field") { it.definingClass == manager }
+        // Resolve the preference API from the native toggle that uses this field,
+        // rather than assuming a network callback has the same preference API.
+        val references = toggle.implementation!!.instructions.mapNotNull { it.getReference<MethodReference>() }.distinct()
+        val read = references.singleNative("getBoolean(String, boolean) call") {
+            it.definingClass == prefs.type && it.name == "getBoolean" && it.returnType == "Z" &&
+                it.parameterTypes.map(CharSequence::toString) == listOf("Ljava/lang/String;", "Z")
         }
-        val edit = references.distinct().single {
+        val edit = references.singleNative("preferences edit call") {
             it.definingClass == prefs.type && it.name == "edit" && it.parameterTypes.isEmpty()
         }
-        val put = references.distinct().single {
-            it.definingClass == edit.returnType && it.parameterTypes.map { p -> p.toString() } == listOf("Ljava/lang/String;", "Z")
+        val put = references.singleNative("boolean editor call") {
+            it.definingClass == edit.returnType && it.returnType == edit.returnType &&
+                it.parameterTypes.map(CharSequence::toString) == listOf("Ljava/lang/String;", "Z")
         }
-        val apply = references.distinct().single {
+        val apply = references.singleNative("editor apply call") {
             it.definingClass == edit.returnType && it.parameterTypes.isEmpty() && it.returnType == "V"
         }
         val extension = mutableClassDefBy(EXTENSION)
         fun bridge(name: String, registers: Int, code: String) {
-            val original = extension.methods.single { it.name == name }
+            val original = extension.methods.singleNative("$name extension bridge") { it.name == name }
             val replacement = ImmutableMethod(
                 original.definingClass,
                 original.name,

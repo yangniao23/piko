@@ -49,6 +49,25 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
         run: ./gradlew buildAndroid :patches:checkStringResources :patches:generatePatchesList -Pversion="$VERSION" --console=plain
 
+      - name: Verify custom patches on the 12.19.1 regression fixture
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          FIXTURE_DIR="$RUNNER_TEMP/piko-regression"
+          mkdir -p "$FIXTURE_DIR"
+          gh release download v2.1.1 --repo MorpheApp/morphe-desktop --pattern morphe-desktop-2.1.1-all.jar --dir "$FIXTURE_DIR"
+          gh release download piko-v3.11.1 --repo monsivamon/twitter-apk --pattern twitter-piko-v12.19.1-release.0.apk --dir "$FIXTURE_DIR"
+          (cd "$FIXTURE_DIR" && sha256sum --check <<'EOF'
+          3a2efefd567b44dde15971a58d5aa649a32aba30781d3400dc08d688c720168f  morphe-desktop-2.1.1-all.jar
+          fc913562aef1161b2bbba87e5673ccd30bc351b9b1d7ab8acfca322aac083b39  twitter-piko-v12.19.1-release.0.apk
+          EOF
+          )
+          python3 .github/scripts/check_custom_patch_application.py \
+            --morphe "$FIXTURE_DIR/morphe-desktop-2.1.1-all.jar" \
+            --apk "$FIXTURE_DIR/twitter-piko-v12.19.1-release.0.apk" \
+            --mpp "patches/build/libs/patches-${VERSION}.mpp" \
+            --output "$FIXTURE_DIR/output"
+
       - name: Prepare release files
         run: |
           mkdir -p dist
@@ -85,7 +104,9 @@ jobs:
           - Chat fix adapted from https://github.com/crimera/piko/pull/2302 (not yet merged upstream).
           - Enable automatic data saver in Piko settings after patching; it is off by default.
           - This replaces the full Piko bundle. It is different from the older standalone **Cellular-only data saver** patch.
-          - Build, string checks, chat request routing tests, and loaded patch list checks passed. APK patching and on-device behavior remain unverified in this fork.
+          - Build, string checks, chat request routing tests, and loaded patch list checks passed.
+          - Both custom patches were applied to a pinned public Piko 12.19.1 APK; rebuilt DEX was checked for native bridges, the correct satellite callback, startup initialization, and chat operation hooks. This fixture is already patched; it does not test all 75 patches on a clean APKM.
+          - On-device behavior remains unverified in this fork.
 
           The MPP is unsigned; SHA256SUMS is provided for file integrity checks.
           EOF
